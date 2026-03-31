@@ -9,9 +9,8 @@ tap "anomalyco/tap"
 brew "atac"         # API client for the terminal
 brew "bandwhich"    # bandwidth utilization monitor
 brew "bat"          # cat clone with syntax highlighting
-brew "btm"          # system monitor (bottom)
+brew "bottom"       # system monitor (btm)
 brew "delta"        # git diff viewer
-brew "dog"          # DNS client (dig alternative)
 brew "dust"         # intuitive disk usage (du alternative)
 brew "eza"          # modern ls replacement
 brew "fd"           # simple, fast find alternative
