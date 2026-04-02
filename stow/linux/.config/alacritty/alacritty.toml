@@ -1,0 +1,20 @@
+# Managed by GNU Stow — edit in dotfiles/stow/linux/.config/alacritty/alacritty.toml
+
+[window]
+padding = { x = 8, y = 8 }
+decorations = "full"
+
+[font]
+normal = { family = "JetBrainsMono Nerd Font", style = "Regular" }
+bold   = { family = "JetBrainsMono Nerd Font", style = "Bold" }
+size   = 13.0
+
+[cursor]
+style = { shape = "Block", blinking = "Off" }
+
+[scrolling]
+history = 10000
+
+[colors.primary]
+background = "#1e1e2e"
+foreground = "#cdd6f4"
