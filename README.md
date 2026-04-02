@@ -196,6 +196,88 @@ brew leaves
 
 ---
 
+## Shell configuration (`.zshrc.d` fragments)
+
+`~/.zshrc` is a thin loader that sources every `*.zsh` file in `~/.zshrc.d/` in lexical order. Config is split across fragments:
+
+| Fragment | Stow package | What lives here |
+|---|---|---|
+| `~/.zshrc.d/00-common.zsh` | `common` | starship, zoxide, fzf, history, common aliases, shared PATH |
+| `~/.zshrc.d/50-macos.zsh` | `macos` | NVM lazy-load (homebrew), SDKMAN, cargo env |
+| `~/.zshrc.d/50-linux.zsh` | `linux` | Linuxbrew shellenv, cargo env, NVM, UID/GID export |
+| `~/.zshrc.d/99-local.zsh` | *(not in git)* | Machine-specific: work certs, internal paths, personal tools |
+
+Stow handles the OS split — `50-macos.zsh` and `50-linux.zsh` are mutually exclusive across machines. The loader silently skips missing fragments, so no OS guards are needed inside any file.
+
+### Machine-local overrides (`99-local.zsh`)
+
+Create this file by hand on each machine. It is never committed. Example content for a **work Linux** machine:
+
+```zsh
+# ~/.zshrc.d/99-local.zsh  — work Linux example (NOT in git)
+
+# Local workspace aliases (path is machine-specific)
+alias cdws='cd /local/mnt/workspace/$USER'
+alias cdsw='cd /local/mnt/workspace/$USER/sw'
+
+# pyenv (PYENV_ROOT is deliberately non-standard on this machine)
+export PYENV_ROOT="$HOME/ws/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+
+# Work proxy / CA cert for Node
+export NODE_EXTRA_CA_CERTS="/path/to/company-ca-bundle.pem"
+
+# Local tool installs
+export PATH="$PATH:/path/to/local/tools/bin"
+
+# SSH agent cleanup on shell exit
+trap 'test -n "$SSH_AGENT_PID" && eval `$(usr/bin/ssh-agent -k)`' 0
+```
+
+Example for a **work macOS** machine:
+
+```zsh
+# ~/.zshrc.d/99-local.zsh  — work macOS example (NOT in git)
+
+# Work CA cert (Netskope / corporate MITM)
+export NODE_EXTRA_CA_CERTS="/Library/Application Support/CompanyAgent/ca-bundle.pem"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
+
+# ghcup
+[ -f "$HOME/.ghcup/env" ] && . "$HOME/.ghcup/env"
+
+# postgres (brew-installed, version-pinned)
+export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"
+
+# pyenv
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+```
+
+Example for a **personal macOS** machine:
+
+```zsh
+# ~/.zshrc.d/99-local.zsh  — personal macOS example (NOT in git)
+
+# Volta
+export VOLTA_HOME="$HOME/.volta"
+export PATH="$VOLTA_HOME/bin:$PATH"
+
+# Local nvim build
+export PATH="$HOME/tools/nvim-macos/bin:$PATH"
+
+# VS Code CLI
+export PATH="$PATH:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
+```
+
+---
+
 ## How to add a new heavy path
 
 Say you want to redirect `~/.new-tool` to local storage.
