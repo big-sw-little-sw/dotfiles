@@ -2,11 +2,29 @@
 # macOS only - Taps
 # ============================================================
 tap "homebrew/cask-fonts"
+tap "railwaycat/emacsmacport"
+
+# ============================================================
+# macOS only (Emacs)
+# ============================================================
+
+# Emacs pre-requisites
+brew "ripgrep"
+brew "coreutils"
+brew "fd"
+
+# for compiling vterm, etc.
+brew "libtool" 
+brew "libvterm"
+
+# Emacs
+brew "railwaycat/emacsmacport/emacs-mac"
 
 # ============================================================
 # macOS only - Casks (Fonts)
 # ============================================================
 cask "font-jetbrains-mono-nerd-font"
+cask "emacs-mac"
 
 # ============================================================
 # macOS only - Casks (Applications)
