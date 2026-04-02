@@ -132,6 +132,7 @@ bash ~/dotfiles/scripts/check-linux-heavy.sh
 | `~/.cache/JetBrains` | `~/.local-heavy/cache/JetBrains` |
 | `~/.cache/sccache` | `~/.local-heavy/cache/sccache` |
 | `~/.cache/uv` | `~/.local-heavy/cache/uv` |
+| `~/.cache/pip` | `~/.local-heavy/cache/pip` |
 | `~/.cache/helm` | `~/.local-heavy/cache/helm` |
 | `~/.cache/pre-commit` | `~/.local-heavy/cache/pre-commit` |
 | `~/.local/pipx` | `~/.local-heavy/local/pipx` |
