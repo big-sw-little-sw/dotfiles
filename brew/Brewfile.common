@@ -41,7 +41,6 @@ brew "krew"                   # kubectl plugin manager
 brew "kubernetes-cli"         # kubectl
 brew "lazydocker"             # terminal UI for Docker
 brew "lazygit"                # terminal UI for git
-brew "nats-server"            # NATS messaging server
 
 # ============================================================
 # Common - Others
