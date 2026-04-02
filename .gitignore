@@ -1,0 +1,15 @@
+# Editor / OS noise
+.DS_Store
+*.swp
+*~
+
+# Never track runtime data under the heavy anchor skeleton.
+# We must NOT ignore directories (git cannot un-ignore files inside an ignored
+# directory), so we ignore all content under each leaf but exempt directories
+# and .gitkeep files explicitly.
+stow/linux-heavy-dirs/.local-heavy/**
+!stow/linux-heavy-dirs/.local-heavy/**/
+!stow/linux-heavy-dirs/.local-heavy/**/.gitkeep
+
+# Also exclude the .claude workspace from git
+.claude/
