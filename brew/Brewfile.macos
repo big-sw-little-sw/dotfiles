@@ -24,7 +24,7 @@ brew "railwaycat/emacsmacport/emacs-mac"
 # macOS only - Casks (Fonts)
 # ============================================================
 cask "font-jetbrains-mono-nerd-font"
-cask "emacs-mac"
+cask "railwaycat/emacsmacport/emacs-mac"
 
 # ============================================================
 # macOS only - Casks (Applications)
