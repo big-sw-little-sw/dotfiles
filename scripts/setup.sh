@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# bootstrap.sh — thin wrapper to install packages and stow dotfiles.
+# setup.sh — thin wrapper to install packages and stow dotfiles.
 # Safe to re-run: brew bundle is idempotent; stow uses -R (restow).
 #
 # Usage:
-#   bash scripts/bootstrap.sh            # apply
-#   bash scripts/bootstrap.sh --dry-run  # preview: show missing packages and stow conflicts
+#   bash scripts/setup.sh            # apply
+#   bash scripts/setup.sh --dry-run  # preview: show missing packages and stow conflicts
 #
 # On Linux, heavy redirection is skipped if ~/.local-heavy is missing.
 # Create it first (see scripts/check-linux-heavy.sh or README.md).
@@ -69,7 +69,7 @@ if [[ "$OS" == linux ]]; then
         echo ""
         echo "WARNING: ~/.local-heavy is missing — skipping heavy redirection."
         echo "  If your home directory is space-constrained, create the anchor symlink"
-        echo "  (see scripts/check-linux-heavy.sh), then re-run bootstrap.sh."
+        echo "  (see scripts/check-linux-heavy.sh), then re-run setup.sh."
         echo "  Otherwise, no action needed."
     fi
 fi
