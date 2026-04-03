@@ -354,6 +354,12 @@ ls ~/.local-heavy/       # should list subdirectories
 
 ## Important notes
 
-- **Do not store secrets in this repo.** Update `.gitconfig` with your real name/email after cloning — do not commit them here.
+- **Do not store secrets in this repo.** Git identity (name/email) lives in `~/.gitconfig.local` on each machine — create it once, never commit it:
+  ```gitconfig
+  # ~/.gitconfig.local
+  [user]
+      name  = Your Name
+      email = you@example.com
+  ```
 - **`~/.local-heavy` is machine-local.** It must be created per machine/user and must never be committed.
 - **The repo must not contain absolute work paths or usernames.** All paths in tracked files are relative or use `$HOME`/`~` placeholders.
