@@ -314,7 +314,8 @@ Say you want to redirect `~/.new-tool` to local storage.
 A thin optional wrapper that does all of the above in sequence:
 
 ```bash
-bash ~/dotfiles/scripts/bootstrap.sh
+bash ~/dotfiles/scripts/bootstrap.sh            # apply
+bash ~/dotfiles/scripts/bootstrap.sh --dry-run  # preview: show missing packages and stow conflicts
 ```
 
 It detects macOS vs Linux, runs `brew bundle`, stows common + OS-specific packages, and — on Linux — stows heavy packages if `~/.local-heavy` exists. Safe to re-run at any time: `brew bundle` is idempotent and stow is invoked with `-R` (restow), which removes then re-creates symlinks. This handles re-runs, post-pull updates, conflict recovery, and new package additions cleanly.
@@ -333,12 +334,22 @@ The script prints whether the anchor exists, where it points, and copy/paste ins
 
 **Stow reports a conflict**
 
-Stow refuses to overwrite existing files. Back up the conflicting file, remove it, then re-run stow:
+Stow refuses to overwrite existing files or symlinks — including ones left over from a previous tool install. Use a dry run first to see all conflicts at once:
 
 ```bash
-mv ~/.zshrc ~/.zshrc.bak
-cd ~/dotfiles/stow && stow --target="$HOME" common
+cd ~/dotfiles/stow
+stow -n -R --target="$HOME" common        # preview conflicts without changing anything
 ```
+
+For each conflicting path, back it up and remove it, then re-run:
+
+```bash
+mv ~/.zshrc ~/.zshrc.bak                  # example: back up conflicting dotfile
+rm ~/.cargo                               # example: remove conflicting symlink
+cd ~/dotfiles/stow && stow -R --target="$HOME" common heavy-links
+```
+
+The same applies to heavy redirection paths (`~/.cargo`, `~/.cache/uv`, etc.) if they already exist as real directories or foreign symlinks — back up any content you want to keep, remove the path, then restow.
 
 **Heavy paths not resolving correctly on Linux**
 
