@@ -8,9 +8,9 @@ Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/) an
 |---|---|---|
 | Dotfiles | GNU Stow | `common` / `macos` / `linux` |
 | Packages | `brew bundle` | `Brewfile.common` / `.macos` / `.linux` |
-| Linux heavy storage | GNU Stow | `heavy-links` + `heavy-dirs` |
+| Heavy storage redirection | GNU Stow | `heavy-links` + `heavy-dirs` |
 
-**Linux heavy redirection** (optional): On Linux machines where `$HOME` is space-constrained (NFS quota, small partition, etc.), tool-generated caches (Cargo, Rust, npm, Maven, VS Code Server, JetBrains, etc.) are redirected to a local disk via a user-created anchor symlink `~/.local-heavy`. The repo contains the symlink skeletons; each machine/user creates the anchor once. Machines without storage pressure can skip this entirely.
+**Heavy storage redirection** (optional): On machines where `$HOME` is space-constrained (NFS quota, small partition, etc.), tool-generated caches (Cargo, Rust, npm, Maven, VS Code Server, JetBrains, etc.) are redirected to a local disk via a user-created anchor symlink `~/.local-heavy`. The repo contains the symlink skeletons; each machine/user creates the anchor once. Machines without storage pressure can skip this entirely.
 
 ---
 
@@ -44,35 +44,120 @@ brew install stow
 
 ---
 
-## Quick start: macOS
+## Setup
+
+`setup.sh` handles everything: detects your OS, installs packages via `brew bundle`, and stows dotfiles. It is safe to re-run at any time — `brew bundle` is idempotent and stow is invoked with `-R` (restow), which removes then re-creates symlinks. This handles re-runs, post-pull updates, conflict recovery, and new package additions cleanly.
 
 ```bash
 git clone <your-repo-url> ~/dotfiles
 cd ~/dotfiles
 
-brew bundle --file brew/Brewfile.common
-brew bundle --file brew/Brewfile.macos
-
-cd stow
-stow --target="$HOME" common macos
+bash scripts/setup.sh            # apply
+bash scripts/setup.sh --dry-run  # preview: show missing packages and stow conflicts
 ```
 
-## Quick start: Linux (no heavy redirection)
+On Linux, if `~/.local-heavy` exists, the heavy redirection packages are stowed automatically. See [Linux: heavy storage redirection](#linux-heavy-storage-redirection) for setup.
+
+---
+
+## Troubleshooting
+
+**Stow reports a conflict**
+
+Stow refuses to overwrite existing files or symlinks — including ones left over from a previous tool install. Use a dry run first to see all conflicts at once:
 
 ```bash
-git clone <your-repo-url> ~/dotfiles
-cd ~/dotfiles
+cd ~/dotfiles/stow
+stow -n -R --target="$HOME" common        # preview conflicts without changing anything
+```
 
-brew bundle --file brew/Brewfile.common
-brew bundle --file brew/Brewfile.linux
+For each conflicting path, back it up and remove it, then re-run:
 
-cd stow
-stow --target="$HOME" common linux
+```bash
+mv ~/.zshrc ~/.zshrc.bak                  # conflicting dotfile — back up and remove
+rm ~/.cargo                               # conflicting foreign symlink — just remove
+cd ~/dotfiles/stow && stow -R --target="$HOME" common heavy-links
+```
+
+If the conflicting path is a real directory with content you want to keep (e.g. `~/.cargo` with existing crates), move it, restow, then migrate the content:
+
+```bash
+mv ~/.cargo ~/.cargo.bak
+cd ~/dotfiles/stow && stow -R --target="$HOME" heavy-links
+mv ~/.cargo.bak/* ~/.cargo/               # ~/.cargo now points to ~/.local-heavy/cargo
+```
+
+**`~/.local-heavy` is missing on Linux**
+
+```bash
+bash ~/dotfiles/scripts/check-linux-heavy.sh
+```
+
+The script prints whether the anchor exists, where it points, and copy/paste instructions if it's missing.
+
+**Heavy paths not resolving correctly**
+
+Verify the anchor exists and points to a real directory:
+
+```bash
+ls -la ~/.local-heavy    # should show -> /path/to/local/disk
+ls ~/.local-heavy/       # should list subdirectories
 ```
 
 ---
 
-## Linux: enable heavy redirection (space-constrained home)
+## Manual brew and stow commands
+
+Use these when you want fine-grained control, or on Linux without Homebrew.
+
+### Brew
+
+```bash
+# Install / update — safe to rerun at any time
+brew bundle --file brew/Brewfile.common
+brew bundle --file brew/Brewfile.macos    # macOS only
+brew bundle --file brew/Brewfile.linux    # Linux only
+
+# Audit drift: packages installed but not in any Brewfile
+brew leaves
+```
+
+### Stow
+
+Always run stow from the `stow/` directory (or pass `-d stow/` from the repo root).
+
+Prefer `stow -R` (restow) over plain `stow` — it removes then re-creates symlinks, making it safe to re-run after pulling updates, recovering from conflicts, or adding new packages.
+
+```bash
+cd ~/dotfiles/stow
+
+# Dry run — preview what would be linked
+stow -n -R --target="$HOME" common
+
+# Apply (or re-apply safely)
+stow -R --target="$HOME" common
+
+# Remove links for a package
+stow -D --target="$HOME" common
+```
+
+**macOS**
+
+```bash
+cd ~/dotfiles/stow
+stow -R --target="$HOME" common macos
+```
+
+**Linux (no heavy redirection)**
+
+```bash
+cd ~/dotfiles/stow
+stow -R --target="$HOME" common linux
+```
+
+---
+
+## Linux: heavy storage redirection
 
 Do this when `$HOME` is space-constrained and you want Cargo, Rust, npm, Maven, VS Code Server, JetBrains caches, etc. redirected to local disk.
 
@@ -98,11 +183,18 @@ On a personal Linux box it might be a local SSD:
 LOCAL_DISK=/data/home-mirror
 ```
 
-### Step 2 — stow the skeleton and links
+### Step 2 — run setup.sh (or stow manually)
+
+```bash
+bash ~/dotfiles/scripts/setup.sh
+# heavy packages are stowed automatically when ~/.local-heavy exists
+```
+
+Or manually:
 
 ```bash
 cd ~/dotfiles/stow
-stow --target="$HOME" heavy-dirs heavy-links
+stow -R --target="$HOME" heavy-dirs heavy-links
 ```
 
 ### What this changes
@@ -143,43 +235,6 @@ bash ~/dotfiles/scripts/check-linux-heavy.sh
 
 ---
 
-## Stow operations
-
-Always run stow from the `stow/` directory (or pass `-d stow/` from the repo root).
-
-Prefer `stow -R` (restow) over plain `stow` — it removes then re-creates symlinks, making it safe to re-run after pulling updates, recovering from conflicts, or adding new packages.
-
-```bash
-cd ~/dotfiles/stow
-
-# Dry run — preview what would be linked
-stow -n --target="$HOME" common
-
-# Apply (or re-apply safely)
-stow -R --target="$HOME" common
-
-# Remove links for a package
-stow -D --target="$HOME" common
-```
-
-If stow reports a conflict (existing file or directory in `$HOME`), back up or remove the conflicting path and re-run. Stow will not overwrite existing content.
-
----
-
-## Brew operations
-
-```bash
-# Install / update — safe to rerun at any time
-brew bundle --file brew/Brewfile.common
-brew bundle --file brew/Brewfile.macos    # macOS only
-brew bundle --file brew/Brewfile.linux    # Linux only
-
-# Audit drift: packages installed but not in any Brewfile
-brew leaves
-```
-
----
-
 ## How to add a new dotfile
 
 1. Place the file inside the appropriate stow package directory, mirroring the `$HOME` path:
@@ -192,6 +247,38 @@ brew leaves
    stow -R --target="$HOME" common
    ```
 3. Commit.
+
+---
+
+## How to add a new heavy path
+
+Say you want to redirect `~/.new-tool` to local storage.
+
+1. **Add the symlink** in `stow/heavy-links/`:
+   ```bash
+   cd ~/dotfiles/stow/heavy-links
+   ln -s .local-heavy/new-tool .new-tool
+   ```
+   For nested paths like `~/.cache/new-tool`:
+   ```bash
+   ln -s ../.local-heavy/cache/new-tool .cache/new-tool
+   ```
+
+2. **Add the skeleton directory** in `stow/heavy-dirs/`:
+   ```bash
+   mkdir -p ~/dotfiles/stow/heavy-dirs/.local-heavy/new-tool
+   touch    ~/dotfiles/stow/heavy-dirs/.local-heavy/new-tool/.gitkeep
+   ```
+
+3. `.gitignore` already covers `stow/heavy-dirs/.local-heavy/**/*` with an exception for `.gitkeep`, so no changes needed there.
+
+4. Re-stow:
+   ```bash
+   cd ~/dotfiles/stow
+   stow -R --target="$HOME" heavy-dirs heavy-links
+   ```
+
+5. Commit.
 
 ---
 
@@ -273,91 +360,6 @@ export PATH="$HOME/tools/nvim-macos/bin:$PATH"
 
 # VS Code CLI
 export PATH="$PATH:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
-```
-
----
-
-## How to add a new heavy path
-
-Say you want to redirect `~/.new-tool` to local storage.
-
-1. **Add the symlink** in `stow/heavy-links/`:
-   ```bash
-   cd ~/dotfiles/stow/heavy-links
-   ln -s .local-heavy/new-tool .new-tool
-   ```
-   For nested paths like `~/.cache/new-tool`:
-   ```bash
-   ln -s ../.local-heavy/cache/new-tool .cache/new-tool
-   ```
-
-2. **Add the skeleton directory** in `stow/heavy-dirs/`:
-   ```bash
-   mkdir -p ~/dotfiles/stow/heavy-dirs/.local-heavy/new-tool
-   touch    ~/dotfiles/stow/heavy-dirs/.local-heavy/new-tool/.gitkeep
-   ```
-
-3. `.gitignore` already covers `stow/heavy-dirs/.local-heavy/**/*` with an exception for `.gitkeep`, so no changes needed there.
-
-4. Re-stow:
-   ```bash
-   cd ~/dotfiles/stow
-   stow -R --target="$HOME" heavy-dirs heavy-links
-   ```
-
-5. Commit.
-
----
-
-## Bootstrap script
-
-A thin optional wrapper that does all of the above in sequence:
-
-```bash
-bash ~/dotfiles/scripts/bootstrap.sh            # apply
-bash ~/dotfiles/scripts/bootstrap.sh --dry-run  # preview: show missing packages and stow conflicts
-```
-
-It detects macOS vs Linux, runs `brew bundle`, stows common + OS-specific packages, and — on Linux — stows heavy packages if `~/.local-heavy` exists. Safe to re-run at any time: `brew bundle` is idempotent and stow is invoked with `-R` (restow), which removes then re-creates symlinks. This handles re-runs, post-pull updates, conflict recovery, and new package additions cleanly.
-
----
-
-## Troubleshooting
-
-**`~/.local-heavy` is missing on Linux**
-
-```bash
-bash ~/dotfiles/scripts/check-linux-heavy.sh
-```
-
-The script prints whether the anchor exists, where it points, and copy/paste instructions if it's missing.
-
-**Stow reports a conflict**
-
-Stow refuses to overwrite existing files or symlinks — including ones left over from a previous tool install. Use a dry run first to see all conflicts at once:
-
-```bash
-cd ~/dotfiles/stow
-stow -n -R --target="$HOME" common        # preview conflicts without changing anything
-```
-
-For each conflicting path, back it up and remove it, then re-run:
-
-```bash
-mv ~/.zshrc ~/.zshrc.bak                  # example: back up conflicting dotfile
-rm ~/.cargo                               # example: remove conflicting symlink
-cd ~/dotfiles/stow && stow -R --target="$HOME" common heavy-links
-```
-
-The same applies to heavy redirection paths (`~/.cargo`, `~/.cache/uv`, etc.) if they already exist as real directories or foreign symlinks — back up any content you want to keep, remove the path, then restow.
-
-**Heavy paths not resolving correctly on Linux**
-
-Verify the anchor exists and points to a real directory:
-
-```bash
-ls -la ~/.local-heavy    # should show -> /path/to/local/disk
-ls ~/.local-heavy/       # should list subdirectories
 ```
 
 ---
