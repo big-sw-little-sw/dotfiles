@@ -33,3 +33,6 @@ cask "claude-code"
 cask "ghostty"
 cask "kitty"
 cask "zed"
+
+# Symbols Nerd Font (Symbols only)
+cask font-symbols-only-nerd-font
