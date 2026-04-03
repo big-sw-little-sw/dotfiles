@@ -8,9 +8,9 @@ Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/) an
 |---|---|---|
 | Dotfiles | GNU Stow | `common` / `macos` / `linux` |
 | Packages | `brew bundle` | `Brewfile.common` / `.macos` / `.linux` |
-| Linux heavy storage | GNU Stow | `linux-heavy-links` + `linux-heavy-dirs` |
+| Linux heavy storage | GNU Stow | `heavy-links` + `heavy-dirs` |
 
-**Linux heavy redirection** (optional): On Linux machines where `$HOME` lives on NFS with tight quota, tool-generated caches (Cargo, Rust, npm, Maven, VS Code Server, JetBrains, etc.) are redirected to a local disk via a user-created anchor symlink `~/.local-heavy`. The repo contains the symlink skeletons; each machine/user creates the anchor once. Machines without NFS pressure can skip this entirely.
+**Linux heavy redirection** (optional): On Linux machines where `$HOME` is space-constrained (NFS quota, small partition, etc.), tool-generated caches (Cargo, Rust, npm, Maven, VS Code Server, JetBrains, etc.) are redirected to a local disk via a user-created anchor symlink `~/.local-heavy`. The repo contains the symlink skeletons; each machine/user creates the anchor once. Machines without storage pressure can skip this entirely.
 
 ---
 
@@ -72,9 +72,9 @@ stow --target="$HOME" common linux
 
 ---
 
-## Linux: enable heavy redirection (for NFS homes)
+## Linux: enable heavy redirection (space-constrained home)
 
-Do this when `$HOME` is on NFS or has tight quota and you want Cargo, Rust, npm, Maven, VS Code Server, JetBrains caches, etc. redirected to local disk.
+Do this when `$HOME` is space-constrained and you want Cargo, Rust, npm, Maven, VS Code Server, JetBrains caches, etc. redirected to local disk.
 
 ### Step 1 — create the anchor symlink (machine-local, NOT in git)
 
@@ -102,13 +102,13 @@ LOCAL_DISK=/data/home-mirror
 
 ```bash
 cd ~/dotfiles/stow
-stow --target="$HOME" linux-heavy-dirs linux-heavy-links
+stow --target="$HOME" heavy-dirs heavy-links
 ```
 
 ### What this changes
 
-- `linux-heavy-dirs` stows the directory skeleton under `~/.local-heavy/`, using `.gitkeep` files to track structure without tracking runtime content.
-- `linux-heavy-links` stows symlinks in `$HOME` so that paths like `~/.cargo`, `~/.cache/uv`, `~/.vscode-server`, etc. resolve through `~/.local-heavy` and land on local disk.
+- `heavy-dirs` stows the directory skeleton under `~/.local-heavy/`, using `.gitkeep` files to track structure without tracking runtime content.
+- `heavy-links` stows symlinks in `$HOME` so that paths like `~/.cargo`, `~/.cache/uv`, `~/.vscode-server`, etc. resolve through `~/.local-heavy` and land on local disk.
 
 To check anchor status at any time:
 
@@ -147,20 +147,19 @@ bash ~/dotfiles/scripts/check-linux-heavy.sh
 
 Always run stow from the `stow/` directory (or pass `-d stow/` from the repo root).
 
+Prefer `stow -R` (restow) over plain `stow` — it removes then re-creates symlinks, making it safe to re-run after pulling updates, recovering from conflicts, or adding new packages.
+
 ```bash
 cd ~/dotfiles/stow
 
 # Dry run — preview what would be linked
 stow -n --target="$HOME" common
 
-# Apply
-stow --target="$HOME" common
+# Apply (or re-apply safely)
+stow -R --target="$HOME" common
 
 # Remove links for a package
 stow -D --target="$HOME" common
-
-# Re-stow (remove + re-apply, useful after changes)
-stow -R --target="$HOME" common
 ```
 
 If stow reports a conflict (existing file or directory in `$HOME`), back up or remove the conflicting path and re-run. Stow will not overwrite existing content.
@@ -282,9 +281,9 @@ export PATH="$PATH:/Applications/Visual Studio Code.app/Contents/Resources/app/b
 
 Say you want to redirect `~/.new-tool` to local storage.
 
-1. **Add the symlink** in `stow/linux-heavy-links/`:
+1. **Add the symlink** in `stow/heavy-links/`:
    ```bash
-   cd ~/dotfiles/stow/linux-heavy-links
+   cd ~/dotfiles/stow/heavy-links
    ln -s .local-heavy/new-tool .new-tool
    ```
    For nested paths like `~/.cache/new-tool`:
@@ -292,18 +291,18 @@ Say you want to redirect `~/.new-tool` to local storage.
    ln -s ../.local-heavy/cache/new-tool .cache/new-tool
    ```
 
-2. **Add the skeleton directory** in `stow/linux-heavy-dirs/`:
+2. **Add the skeleton directory** in `stow/heavy-dirs/`:
    ```bash
-   mkdir -p ~/dotfiles/stow/linux-heavy-dirs/.local-heavy/new-tool
-   touch    ~/dotfiles/stow/linux-heavy-dirs/.local-heavy/new-tool/.gitkeep
+   mkdir -p ~/dotfiles/stow/heavy-dirs/.local-heavy/new-tool
+   touch    ~/dotfiles/stow/heavy-dirs/.local-heavy/new-tool/.gitkeep
    ```
 
-3. `.gitignore` already covers `stow/linux-heavy-dirs/.local-heavy/**/*` with an exception for `.gitkeep`, so no changes needed there.
+3. `.gitignore` already covers `stow/heavy-dirs/.local-heavy/**/*` with an exception for `.gitkeep`, so no changes needed there.
 
 4. Re-stow:
    ```bash
    cd ~/dotfiles/stow
-   stow -R --target="$HOME" linux-heavy-dirs linux-heavy-links
+   stow -R --target="$HOME" heavy-dirs heavy-links
    ```
 
 5. Commit.
@@ -318,7 +317,7 @@ A thin optional wrapper that does all of the above in sequence:
 bash ~/dotfiles/scripts/bootstrap.sh
 ```
 
-It detects macOS vs Linux, runs `brew bundle`, stows common + OS-specific packages, and — on Linux — stows heavy packages if `~/.local-heavy` exists.
+It detects macOS vs Linux, runs `brew bundle`, stows common + OS-specific packages, and — on Linux — stows heavy packages if `~/.local-heavy` exists. Safe to re-run at any time: `brew bundle` is idempotent and stow is invoked with `-R` (restow), which removes then re-creates symlinks. This handles re-runs, post-pull updates, conflict recovery, and new package additions cleanly.
 
 ---
 
