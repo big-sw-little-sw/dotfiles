@@ -253,48 +253,72 @@ bash ~/dotfiles/scripts/check-linux-heavy.sh
 
 ## How to add a new dotfile
 
-1. Place the file inside the appropriate stow package directory, mirroring the `$HOME` path:
+**New file (doesn't exist in `$HOME` yet):**
+
+1. Place it inside the appropriate stow package, mirroring the `$HOME` path:
    ```
    stow/common/.config/foo/config
    ```
-2. Stow it:
+2. Stow, commit, and push:
    ```bash
-   cd ~/dotfiles/stow
-   stow -R --target="$HOME" common
+   cd ~/dotfiles/stow && stow -R --target="$HOME" common
+   cd ~/dotfiles
+   git add stow/common/.config/foo/config
+   git commit -m "Add foo config"
+   git push
    ```
-3. Commit.
+
+**Adopting a file that already exists in `$HOME`:**
+
+1. Create a placeholder at the same path in the stow package:
+   ```bash
+   touch ~/dotfiles/stow/common/.config/foo/config
+   ```
+2. Adopt — stow moves the real file from `$HOME` into the package and replaces it with a symlink:
+   ```bash
+   cd ~/dotfiles/stow && stow --adopt --target="$HOME" common
+   ```
+3. Commit and push:
+   ```bash
+   cd ~/dotfiles
+   git add stow/common/.config/foo/config
+   git commit -m "Adopt foo config"
+   git push
+   ```
 
 ---
 
 ## How to add a new heavy path
 
-Say you want to redirect `~/.new-tool` to local storage.
+Say you want to redirect `~/.new-tool` to local storage. Two places must be updated:
 
-1. **Add the symlink** in `stow/heavy-links/`:
+1. **Add the symlink** in `stow/linux-heavy-links/`:
    ```bash
-   cd ~/dotfiles/stow/heavy-links
+   cd ~/dotfiles/stow/linux-heavy-links
    ln -s .local-heavy/new-tool .new-tool
    ```
-   For nested paths like `~/.cache/new-tool`:
+   For nested paths (e.g. `~/.cache/new-tool`, `~/.local/share/new-tool`), the relative target gains one `..` per extra directory level:
    ```bash
-   ln -s ../.local-heavy/cache/new-tool .cache/new-tool
+   ln -s ../.local-heavy/cache/new-tool   .cache/new-tool        # depth 2
+   ln -s ../../.local-heavy/local/share/new-tool .local/share/new-tool  # depth 3
    ```
 
-2. **Add the skeleton directory** in `stow/heavy-dirs/`:
+2. **Add the skeleton directory** in `stow/linux-heavy-dirs/`:
    ```bash
-   mkdir -p ~/dotfiles/stow/heavy-dirs/.local-heavy/new-tool
-   touch    ~/dotfiles/stow/heavy-dirs/.local-heavy/new-tool/.gitkeep
+   mkdir -p ~/dotfiles/stow/linux-heavy-dirs/.local-heavy/new-tool
+   touch    ~/dotfiles/stow/linux-heavy-dirs/.local-heavy/new-tool/.gitkeep
    ```
 
-3. `.gitignore` already covers `stow/heavy-dirs/.local-heavy/**/*` with an exception for `.gitkeep`, so no changes needed there.
+3. `.gitignore` already covers runtime content under `linux-heavy-dirs/` — no changes needed there.
 
-4. Re-stow:
+4. Re-stow, commit, and push:
    ```bash
-   cd ~/dotfiles/stow
-   stow -R --target="$HOME" heavy-dirs heavy-links
+   cd ~/dotfiles/stow && stow -R --target="$HOME" linux-heavy-dirs linux-heavy-links
+   cd ~/dotfiles
+   git add stow/linux-heavy-links/.new-tool stow/linux-heavy-dirs/.local-heavy/new-tool/.gitkeep
+   git commit -m "Add ~/.new-tool as heavy path"
+   git push
    ```
-
-5. Commit.
 
 ---
 
