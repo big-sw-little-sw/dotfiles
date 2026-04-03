@@ -1,6 +1,7 @@
-[user]
-    name  = Your Name
-    email = you@example.com
+# Identity is machine-local — create ~/.gitconfig.local with [user] name/email.
+# That file is never committed to the dotfiles repo.
+[include]
+    path = ~/.gitconfig.local
 
 [core]
     editor     = nvim
