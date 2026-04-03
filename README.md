@@ -106,6 +106,22 @@ ls ~/.local-heavy/       # should list subdirectories
 
 ---
 
+## After pulling updates
+
+Re-run `setup.sh` — it is idempotent and handles everything:
+
+```bash
+cd ~/dotfiles
+git pull
+bash scripts/setup.sh
+```
+
+`brew bundle` skips already-installed packages. `stow -R` removes and re-creates symlinks, picking up new files, moved files, and deletions correctly.
+
+If you prefer to run steps manually, see the [Manual brew and stow commands](#manual-brew-and-stow-commands) section below.
+
+---
+
 ## Manual brew and stow commands
 
 Use these when you want fine-grained control, or on Linux without Homebrew.
