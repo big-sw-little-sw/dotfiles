@@ -7,9 +7,9 @@
 # We must NOT ignore directories (git cannot un-ignore files inside an ignored
 # directory), so we ignore all content under each leaf but exempt directories
 # and .gitkeep files explicitly.
-stow/linux-heavy-dirs/.local-heavy/**
-!stow/linux-heavy-dirs/.local-heavy/**/
-!stow/linux-heavy-dirs/.local-heavy/**/.gitkeep
+stow/heavy-dirs/.local-heavy/**
+!stow/heavy-dirs/.local-heavy/**/
+!stow/heavy-dirs/.local-heavy/**/.gitkeep
 
 # Also exclude the .claude workspace from git
 .claude/

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # bootstrap.sh — thin wrapper to install packages and stow dotfiles.
+# Safe to re-run: brew bundle is idempotent; stow uses -R (restow).
 #
 # Usage:
 #   bash scripts/bootstrap.sh
@@ -32,19 +33,19 @@ brew bundle --file "$BREW_DIR/Brewfile.$OS"
 # ── Stow dotfiles ─────────────────────────────────────────────
 echo "==> Stowing common and $OS dotfiles..."
 cd "$STOW_DIR"
-stow --target="$HOME" common "$OS"
+stow -R --target="$HOME" common "$OS"
 
 # ── Linux heavy redirection (optional) ───────────────────────
 if [[ "$OS" == linux ]]; then
     if [[ -L "$HOME/.local-heavy" || -d "$HOME/.local-heavy" ]]; then
         echo "==> ~/.local-heavy found; stowing heavy packages..."
-        stow --target="$HOME" linux-heavy-dirs linux-heavy-links
+        stow -R --target="$HOME" heavy-dirs heavy-links
     else
         echo ""
         echo "WARNING: ~/.local-heavy is missing — skipping heavy redirection."
-        echo "  Run scripts/check-linux-heavy.sh for setup instructions."
-        echo "  Once created, re-run:"
-        echo "    cd $STOW_DIR && stow linux-heavy-dirs linux-heavy-links"
+        echo "  If your home directory is space-constrained, create the anchor symlink"
+        echo "  (see scripts/check-linux-heavy.sh), then re-run bootstrap.sh."
+        echo "  Otherwise, no action needed."
     fi
 fi
 
