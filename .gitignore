@@ -13,3 +13,4 @@ stow/heavy-dirs/.local-heavy/**
 
 # Also exclude the .claude workspace from git
 .claude/
+/.agent-shell/
