@@ -24,6 +24,7 @@ brew "starship"     # cross-shell prompt
 brew "tealdeer"     # fast tldr client
 brew "tokei"        # code statistics
 brew "uv"           # fast Python package manager
+brew "ty"           # fast Python type checker and LSP
 brew "zellij"       # terminal multiplexer
 brew "zoxide"       # smarter cd command
 
