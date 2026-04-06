@@ -2,7 +2,7 @@
 # macOS only - Taps
 # ============================================================
 tap "homebrew/cask-fonts"
-tap "railwaycat/emacsmacport"
+tap "d12frosted/emacs-plus"
 
 # ============================================================
 # macOS only (Emacs)
@@ -17,14 +17,11 @@ brew "fd"
 brew "libtool" 
 brew "libvterm"
 
-# Emacs
-brew "railwaycat/emacsmacport/emacs-mac"
-
 # ============================================================
-# macOS only - Casks (Fonts)
+# macOS only - Casks
 # ============================================================
 cask "font-jetbrains-mono-nerd-font"
-cask "railwaycat/emacsmacport/emacs-mac"
+cask "d12frosted/emacs-plus/emacs-plus-app"
 
 # ============================================================
 # macOS only - Casks (Applications)
@@ -35,4 +32,4 @@ cask "kitty"
 cask "zed"
 
 # Symbols Nerd Font (Symbols only)
-cask font-symbols-only-nerd-font
+cask "font-symbols-only-nerd-font"
