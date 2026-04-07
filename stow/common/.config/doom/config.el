@@ -42,7 +42,12 @@
 ;; change `org-directory'. It must be set before org loads!
 (setq org-directory "~/org/")
 
+;; On non-tty emacs frames, this will show markdown headers in scaled fonts
 (setq markdown-header-scaling t)
+
+;; Use the following for tramp-rpc for faster tramp mode
+(use-package! msgpack)
+(use-package! tramp-rpc)
 
 
 ;; Whenever you reconfigure a package, make sure to wrap your config in an

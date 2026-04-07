@@ -13,10 +13,15 @@
 ;; To install SOME-PACKAGE from MELPA, ELPA or emacsmirror:
 ;; (package! some-package)
 ;;
-;; agent-shell and it's dependencies
+;; agent-shell and it's dependencies for LLM based agents
 (package! shell-maker)
 (package! acp)
 (package! agent-shell)
+
+;; For tramp-rpc for faster tramp performance compared to built-in
+(package! msgpack)
+(package! tramp-rpc :recipe (:host github :repo "ArthurHeymans/emacs-tramp-rpc" :files ("lisp/*.el")))
+
 
 ;; To install a package directly from a remote git repo, you must specify a
 ;; `:recipe'. You'll find documentation on what `:recipe' accepts here:
