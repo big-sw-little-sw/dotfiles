@@ -30,6 +30,7 @@ cask "claude-code"
 cask "ghostty"
 cask "kitty"
 cask "zed"
+cask "xquartz"
 
 # Symbols Nerd Font (Symbols only)
 cask "font-symbols-only-nerd-font"
