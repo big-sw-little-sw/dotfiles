@@ -11,6 +11,3 @@ stow/heavy-dirs/.local-heavy/**
 !stow/heavy-dirs/.local-heavy/**/
 !stow/heavy-dirs/.local-heavy/**/.gitkeep
 
-# Also exclude the .claude workspace from git
-.claude/
-/.agent-shell/
