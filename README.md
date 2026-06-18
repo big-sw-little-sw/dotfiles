@@ -9,8 +9,11 @@ Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/) an
 | Dotfiles | GNU Stow | `common` / `macos` / `linux` |
 | Packages | `brew bundle` | `Brewfile.common` / `.macos` / `.linux` |
 | Heavy storage redirection | GNU Stow | `heavy-links` + `heavy-dirs` |
+| Agent guidance | GNU Stow | `agent-guidance-*` + `agent-guidance-heavy` |
 
 **Heavy storage redirection** (optional): On machines where `$HOME` is space-constrained (NFS quota, small partition, etc.), tool-generated caches (Cargo, Rust, npm, Maven, VS Code Server, JetBrains, etc.) are redirected to a local disk via a user-created anchor symlink `~/.local-heavy`. The repo contains the symlink skeletons; each machine/user creates the anchor once. Machines without storage pressure can skip this entirely.
+
+**Agent guidance** (optional): The canonical defaults live at `stow/common/.config/agent-guidance/global-agent-defaults.md`. Tool-facing guidance files for Claude, Codex, Cursor, OpenCode, Pi, and Cline are symlink aliases back to that canonical file. See `README_AGENT_GUIDANCE.md` before stowing these packages; normal-mode agent packages should use `--no-folding`.
 
 ---
 
@@ -211,6 +214,13 @@ Or manually:
 ```bash
 cd ~/dotfiles/stow
 stow -R --target="$HOME" heavy-dirs heavy-links
+```
+
+For heavy agent guidance, include `agent-guidance-heavy`:
+
+```bash
+cd ~/dotfiles/stow
+stow -R --target="$HOME" heavy-dirs heavy-links agent-guidance-heavy
 ```
 
 ### What this changes

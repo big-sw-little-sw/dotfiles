@@ -49,6 +49,8 @@
 (use-package! msgpack)
 (use-package! tramp-rpc)
 
+;; set localleader key to , (comma)
+(setq doom-localleader-key ",")
 
 ;; Whenever you reconfigure a package, make sure to wrap your config in an
 ;; `with-eval-after-load' block, otherwise Doom's defaults may override your

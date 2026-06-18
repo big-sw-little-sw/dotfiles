@@ -31,6 +31,8 @@ cask "ghostty"
 cask "kitty"
 cask "zed"
 cask "xquartz"
+cask "graalvm-jdk@25"
+cask "temurin@25"
 
 # Symbols Nerd Font (Symbols only)
 cask "font-symbols-only-nerd-font"

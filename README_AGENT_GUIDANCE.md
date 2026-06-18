@@ -24,10 +24,12 @@ Within dotfiles:
 ```text
 stow/common/
 - Canonical global guidance text.
-- Safe to stow everywhere.
+- Must exist in the dotfiles checkout because agent guidance aliases point into it.
+- Safe to stow everywhere, but agent guidance aliases do not require `common` to be stowed into `$HOME`.
 
 stow/agent-guidance-*/
 - Normal-mode tool-facing guidance files.
+- These are symlink aliases back to the canonical guidance text.
 - Use when the tool directory lives directly under $HOME.
 
 stow/heavy-links/
@@ -40,6 +42,7 @@ stow/heavy-dirs/
 
 stow/agent-guidance-heavy/
 - Heavy-mode durable guidance files inside ~/.local-heavy targets.
+- These are symlink aliases back to the canonical guidance text.
 - Use only when agent tool directories are redirected through heavy-links.
 ```
 
@@ -49,7 +52,7 @@ Do not put all tool-facing guidance under `common`. `common` should stay uncondi
 
 For normal-mode agent guidance, use `--no-folding`.
 
-Agent tool directories such as `~/.claude`, `~/.codex`, `~/.pi`, `~/.cline`, `~/.agents`, and `~/.config/opencode` are not just config-file locations. Tools may also write runtime data, caches, transcripts, settings, generated skills, or other local state under them.
+Agent tool directories such as `~/.claude`, `~/.codex`, `~/.cursor`, `~/.pi`, `~/.cline`, `~/.agents`, and `~/.config/opencode` are not just config-file locations. Tools may also write runtime data, caches, transcripts, settings, generated skills, or other local state under them.
 
 Without `--no-folding`, GNU Stow may fold a missing directory by making the whole tool directory a symlink into the dotfiles package. Example bad normal-mode result:
 
@@ -107,6 +110,7 @@ cd ~/sw/code/dotfiles/stow
 stow -n --no-folding -R --target="$HOME" \
   agent-guidance-claude \
   agent-guidance-codex \
+  agent-guidance-cursor \
   agent-guidance-opencode \
   agent-guidance-pi \
   agent-guidance-cline
@@ -115,6 +119,7 @@ stow -n --no-folding -R --target="$HOME" \
 stow --no-folding -R --target="$HOME" \
   agent-guidance-claude \
   agent-guidance-codex \
+  agent-guidance-cursor \
   agent-guidance-opencode \
   agent-guidance-pi \
   agent-guidance-cline
@@ -124,7 +129,7 @@ You can include `common` in the same command, but it does not need special foldi
 
 ```bash
 stow -R --target="$HOME" common macos
-stow --no-folding -R --target="$HOME" agent-guidance-claude agent-guidance-codex
+stow --no-folding -R --target="$HOME" agent-guidance-claude agent-guidance-codex agent-guidance-cursor
 ```
 
 If you prefer to make the target directories explicit first:
@@ -133,6 +138,7 @@ If you prefer to make the target directories explicit first:
 mkdir -p \
   ~/.claude \
   ~/.codex \
+  ~/.cursor/rules \
   ~/.config/opencode \
   ~/.pi/agent \
   ~/.cline/rules \
@@ -140,7 +146,54 @@ mkdir -p \
   ~/.clinerules
 
 cd ~/sw/code/dotfiles/stow
-stow --no-folding -R --target="$HOME" agent-guidance-claude agent-guidance-codex agent-guidance-opencode agent-guidance-pi agent-guidance-cline
+stow --no-folding -R --target="$HOME" agent-guidance-claude agent-guidance-codex agent-guidance-cursor agent-guidance-opencode agent-guidance-pi agent-guidance-cline
+```
+
+Cursor note: Cursor documents `AGENTS.md` as a project-root rule file. For home-directory defaults, this repo uses `~/.cursor/rules/global-agent-defaults.md`, symlinked to the canonical defaults. If Cursor stops reading file-backed home rules on a future version, paste the canonical text into Cursor Settings > Rules > User Rules instead.
+
+## Migrating an existing normal-mode install to symlink aliases
+
+If your home guidance files already point into this dotfiles repo, no unstow is needed. After pulling this change, the existing home symlinks continue to point at the same Stow package paths, and those package paths now point at the canonical defaults file.
+
+Run this to add Cursor and restow the existing normal-mode packages:
+
+```bash
+cd ~/sw/code/dotfiles/stow
+
+stow -n --no-folding -R --target="$HOME" \
+  agent-guidance-claude \
+  agent-guidance-codex \
+  agent-guidance-cursor \
+  agent-guidance-opencode \
+  agent-guidance-pi \
+  agent-guidance-cline
+
+stow --no-folding -R --target="$HOME" \
+  agent-guidance-claude \
+  agent-guidance-codex \
+  agent-guidance-cursor \
+  agent-guidance-opencode \
+  agent-guidance-pi \
+  agent-guidance-cline
+```
+
+Then verify every home guidance file resolves to the canonical source:
+
+```bash
+cd ~/sw/code/dotfiles
+
+for p in \
+  ~/.claude/CLAUDE.md \
+  ~/.codex/AGENTS.md \
+  ~/.cursor/rules/global-agent-defaults.md \
+  ~/.config/opencode/AGENTS.md \
+  ~/.pi/agent/AGENTS.md \
+  ~/.cline/rules/global-agent-defaults.md
+do
+  test "$p" -ef stow/common/.config/agent-guidance/global-agent-defaults.md \
+    && echo "OK $p" \
+    || echo "BAD $p"
+done
 ```
 
 ## Heavy mode: Linux with ~/.local-heavy
@@ -180,6 +233,7 @@ Run this after stowing agent guidance:
 for p in \
   ~/.claude \
   ~/.codex \
+  ~/.cursor \
   ~/.pi \
   ~/.cline \
   ~/.agents \
@@ -229,7 +283,7 @@ Use this if you already see something like:
 ### Step 1: inspect what was folded
 
 ```bash
-for p in ~/.claude ~/.codex ~/.pi ~/.cline ~/.agents ~/.clinerules ~/.config/opencode; do
+for p in ~/.claude ~/.codex ~/.cursor ~/.pi ~/.cline ~/.agents ~/.clinerules ~/.config/opencode; do
   echo "== $p"
   ls -ld "$p" 2>/dev/null || true
   [ -L "$p" ] && readlink "$p"
@@ -254,6 +308,7 @@ cd ~/sw/code/dotfiles/stow
 stow -D --target="$HOME" \
   agent-guidance-claude \
   agent-guidance-codex \
+  agent-guidance-cursor \
   agent-guidance-opencode \
   agent-guidance-pi \
   agent-guidance-cline
@@ -313,6 +368,7 @@ Do the same for other affected packages if needed.
 mkdir -p \
   ~/.claude \
   ~/.codex \
+  ~/.cursor/rules \
   ~/.config/opencode \
   ~/.pi/agent \
   ~/.cline/rules \
@@ -328,6 +384,7 @@ cd ~/sw/code/dotfiles/stow
 stow --no-folding -R --target="$HOME" \
   agent-guidance-claude \
   agent-guidance-codex \
+  agent-guidance-cursor \
   agent-guidance-opencode \
   agent-guidance-pi \
   agent-guidance-cline
@@ -337,7 +394,7 @@ stow --no-folding -R --target="$HOME" \
 
 ```bash
 # Tool dirs should not point into dotfiles/stow/agent-guidance-* in normal mode.
-for p in ~/.claude ~/.codex ~/.pi ~/.cline ~/.agents ~/.clinerules ~/.config/opencode; do
+for p in ~/.claude ~/.codex ~/.cursor ~/.pi ~/.cline ~/.agents ~/.clinerules ~/.config/opencode; do
   echo "== $p"
   ls -ld "$p" 2>/dev/null || true
   [ -L "$p" ] && readlink "$p"
@@ -346,6 +403,7 @@ done
 # Guidance files should exist.
 ls -la ~/.claude/CLAUDE.md
 ls -la ~/.codex/AGENTS.md
+ls -la ~/.cursor/rules/global-agent-defaults.md
 ls -la ~/.pi/agent/AGENTS.md
 ls -la ~/.config/opencode/AGENTS.md
 ls -la ~/.cline/rules/global-agent-defaults.md
@@ -358,7 +416,7 @@ Global `my-agent-config` installs should not write into the dotfiles repo.
 Before running global install, verify normal-mode directories are real directories, not folded Stow links into dotfiles:
 
 ```bash
-for p in ~/.claude ~/.codex ~/.pi ~/.cline ~/.agents ~/.clinerules ~/.config/opencode; do
+for p in ~/.claude ~/.codex ~/.cursor ~/.pi ~/.cline ~/.agents ~/.clinerules ~/.config/opencode; do
   if [ -L "$p" ]; then
     target=$(readlink "$p")
     case "$target" in
@@ -409,6 +467,7 @@ Do not version-control generated install outputs in dotfiles:
 ```text
 ~/.claude/skills/*
 ~/.agents/skills/*
+~/.cursor/skills-cursor/*
 ~/.pi/agent/skills/*
 ~/.config/opencode/skills/*
 ~/.config/opencode/commands/*
@@ -453,8 +512,8 @@ Normal mode example:
 cd ~/sw/code/dotfiles
 git pull
 cd stow
-stow -n --no-folding -R --target="$HOME" agent-guidance-claude agent-guidance-codex
-stow --no-folding -R --target="$HOME" agent-guidance-claude agent-guidance-codex
+stow -n --no-folding -R --target="$HOME" agent-guidance-claude agent-guidance-codex agent-guidance-cursor
+stow --no-folding -R --target="$HOME" agent-guidance-claude agent-guidance-codex agent-guidance-cursor
 ```
 
 Heavy mode example:
@@ -474,7 +533,8 @@ For normal mode, add `--no-folding` to the agent guidance stow call:
 ```bash
 stow $STOW_FLAGS --no-folding --target="$HOME" \
   agent-guidance-claude \
-  agent-guidance-codex
+  agent-guidance-codex \
+  agent-guidance-cursor
 ```
 
 For heavy mode, add `agent-guidance-heavy` to the existing heavy package command:
@@ -493,20 +553,41 @@ The canonical text is:
 stow/common/.config/agent-guidance/global-agent-defaults.md
 ```
 
-Tool-facing files in normal and heavy Stow packages are regular-file copies for copy/Stow robustness. If you change the canonical global defaults, refresh those copies before committing.
+Tool-facing files in normal and heavy Stow packages are symlink aliases back to that file. If you change the canonical global defaults, every tool-facing alias sees the change without copying.
 
-Suggested refresh command from the dotfiles repo root:
+This creates a two-hop link from `$HOME` in normal mode:
+
+```text
+~/.codex/AGENTS.md
+-> ~/sw/code/dotfiles/stow/agent-guidance-codex/.codex/AGENTS.md
+-> ~/sw/code/dotfiles/stow/common/.config/agent-guidance/global-agent-defaults.md
+```
+
+The `common` package does not need to be stowed for this to work. The symlink target is inside the repo checkout, not `~/.config/agent-guidance`. It will break only if the `stow/common/.../global-agent-defaults.md` file is missing from the checkout or the checkout moves without restowing.
+
+Expected aliases:
+
+```text
+stow/agent-guidance-claude/.claude/CLAUDE.md
+stow/agent-guidance-codex/.codex/AGENTS.md
+stow/agent-guidance-cursor/.cursor/rules/global-agent-defaults.md
+stow/agent-guidance-opencode/.config/opencode/AGENTS.md
+stow/agent-guidance-pi/.pi/agent/AGENTS.md
+stow/agent-guidance-cline/.cline/rules/global-agent-defaults.md
+stow/agent-guidance-heavy/.local-heavy/agent-tools/claude/CLAUDE.md
+stow/agent-guidance-heavy/.local-heavy/agent-tools/codex/AGENTS.md
+stow/agent-guidance-heavy/.local-heavy/agent-tools/cursor/rules/global-agent-defaults.md
+stow/agent-guidance-heavy/.local-heavy/agent-tools/opencode/AGENTS.md
+stow/agent-guidance-heavy/.local-heavy/agent-tools/pi/agent/AGENTS.md
+stow/agent-guidance-heavy/.local-heavy/agent-tools/cline/rules/global-agent-defaults.md
+```
+
+Check that all aliases resolve:
 
 ```bash
-src=stow/common/.config/agent-guidance/global-agent-defaults.md
-cp "$src" stow/agent-guidance-claude/.claude/CLAUDE.md
-cp "$src" stow/agent-guidance-codex/.codex/AGENTS.md
-cp "$src" stow/agent-guidance-opencode/.config/opencode/AGENTS.md
-cp "$src" stow/agent-guidance-pi/.pi/agent/AGENTS.md
-cp "$src" stow/agent-guidance-cline/.cline/rules/global-agent-defaults.md
-cp "$src" stow/agent-guidance-heavy/.local-heavy/agent-tools/claude/CLAUDE.md
-cp "$src" stow/agent-guidance-heavy/.local-heavy/agent-tools/codex/AGENTS.md
-cp "$src" stow/agent-guidance-heavy/.local-heavy/agent-tools/opencode/AGENTS.md
-cp "$src" stow/agent-guidance-heavy/.local-heavy/agent-tools/pi/agent/AGENTS.md
-cp "$src" stow/agent-guidance-heavy/.local-heavy/agent-tools/cline/rules/global-agent-defaults.md
+find stow/agent-guidance-* -type l -exec sh -c '
+  for p do
+    test -e "$p" || echo "BROKEN: $p -> $(readlink "$p")"
+  done
+' sh {} +
 ```

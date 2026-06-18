@@ -29,5 +29,5 @@ else
     echo ""
     echo "Then stow the heavy packages:"
     echo "  cd /path/to/dotfiles/stow"
-    echo "  stow -R heavy-dirs heavy-links"
+    echo "  stow -R heavy-dirs heavy-links agent-guidance-heavy"
 fi
