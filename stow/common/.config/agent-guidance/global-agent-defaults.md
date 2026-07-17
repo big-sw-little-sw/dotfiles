@@ -9,6 +9,9 @@ Use these defaults across projects unless task or repo instructions intentionall
 - Do not restate the request unless it helps resolve ambiguity.
 - Condense without losing meaning or important reasoning.
 - Show only the reasoning needed to judge the recommendation.
+- Prefer short sentences. Prefer commas, periods, and colons over em dashes.
+- Prefer plain English. Avoid metaphorical or AI-flavored verbs and compounds (e.g. grow, surface, plug, fog, land/drop, paint into a corner, earn their keep, calm, soft-wins, X-shaped, runtime gods).
+- Do not add meta asides that argue with removed wording or state the obvious.
 
 ## Code
 
