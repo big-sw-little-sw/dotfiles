@@ -10,8 +10,12 @@
 #   bash scripts/setup.sh --dry-run       # preview without applying
 #   bash scripts/setup.sh --stow --dry-run
 #
-# On Linux, heavy redirection is skipped if ~/.local-heavy is missing.
-# Create it first (see scripts/check-linux-heavy.sh or README.md).
+# Stow mode is chosen by ~/.local-heavy:
+#   present (Linux)  → heavy-dirs + agent-guidance-heavy + heavy-links
+#   absent           → normal agent-guidance-* into $HOME (--no-folding)
+#
+# On Linux without the anchor, heavy redirection is skipped. Create it first
+# if needed (see scripts/check-linux-heavy.sh or README.md).
 
 set -euo pipefail
 
@@ -19,13 +23,23 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 STOW_DIR="$REPO_ROOT/stow"
 BREW_DIR="$REPO_ROOT/brew"
 
+# Normal-mode agent guidance packages (mutually exclusive with agent-guidance-heavy).
+AGENT_GUIDANCE_NORMAL=(
+    agent-guidance-claude
+    agent-guidance-codex
+    agent-guidance-cursor
+    agent-guidance-opencode
+    agent-guidance-pi
+    agent-guidance-cline
+)
+
 usage() {
     cat <<'EOF'
 Usage: bash scripts/setup.sh [options]
 
   (no brew/stow flags)   Run both brew and stow (default)
   --brew                 Install/update Homebrew packages
-  --stow                 Stow dotfiles (and heavy redirection on Linux)
+  --stow                 Stow dotfiles (+ agent guidance; heavy if ~/.local-heavy)
   --dry-run              Preview only; make no changes
   -h, --help             Show this help
 
@@ -109,32 +123,39 @@ if $DO_STOW; then
     cd "$STOW_DIR"
     stow $STOW_FLAGS --target="$HOME" common "$OS"
 
-    # ── Linux heavy redirection (optional) ───────────────────────
-    # heavy-dirs  → stowed into the local disk that ~/.local-heavy points at
-    # heavy-links → applied into $HOME as one-hop relative symlinks (see
-    #               scripts/apply-heavy-links.sh — do not `stow heavy-links`)
-    if [[ "$OS" == linux ]]; then
-        if [[ -L "$HOME/.local-heavy" || -d "$HOME/.local-heavy" ]]; then
-            HEAVY_ROOT="$(cd "$HOME/.local-heavy" && pwd -P)"
-            echo "==> ~/.local-heavy found -> $HEAVY_ROOT"
-            # --no-folding: create real directories on the local disk and only symlink
-            # leaf files (.gitkeep). Tree-folding would make cargo/ etc. symlinks
-            # into the repo, and runtime data would land in the checkout.
-            echo "==> Stowing heavy-dirs into local disk..."
-            stow $STOW_FLAGS --no-folding --target="$HEAVY_ROOT" heavy-dirs
-            echo "==> Applying heavy-links into \$HOME..."
-            if $DRY_RUN; then
-                bash "$REPO_ROOT/scripts/apply-heavy-links.sh" --dry-run
-            else
-                bash "$REPO_ROOT/scripts/apply-heavy-links.sh"
-            fi
+    # Heavy mode: Linux + ~/.local-heavy anchor.
+    # Normal mode: everywhere else (macOS, or Linux without the anchor).
+    USE_HEAVY=false
+    if [[ "$OS" == linux ]] && [[ -L "$HOME/.local-heavy" || -d "$HOME/.local-heavy" ]]; then
+        USE_HEAVY=true
+    fi
+
+    if $USE_HEAVY; then
+        HEAVY_ROOT="$(cd "$HOME/.local-heavy" && pwd -P)"
+        echo "==> ~/.local-heavy found -> $HEAVY_ROOT (heavy mode)"
+        # --no-folding: create real directories on the local disk and only symlink
+        # leaf files. Tree-folding would make cargo/ etc. symlinks into the repo,
+        # and runtime data would land in the checkout.
+        echo "==> Stowing heavy-dirs + agent-guidance-heavy into local disk..."
+        stow $STOW_FLAGS --no-folding --target="$HEAVY_ROOT" \
+            heavy-dirs agent-guidance-heavy
+        echo "==> Applying heavy-links into \$HOME..."
+        if $DRY_RUN; then
+            bash "$REPO_ROOT/scripts/apply-heavy-links.sh" --dry-run
         else
-            echo ""
-            echo "WARNING: ~/.local-heavy is missing — skipping heavy redirection."
-            echo "  If your home directory is space-constrained, create the anchor symlink"
-            echo "  (see scripts/check-linux-heavy.sh), then re-run: bash scripts/setup.sh --stow"
-            echo "  Otherwise, no action needed."
+            bash "$REPO_ROOT/scripts/apply-heavy-links.sh"
         fi
+    else
+        if [[ "$OS" == linux ]]; then
+            echo "==> ~/.local-heavy missing — normal mode (no heavy redirection)."
+            echo "    Create the anchor (see scripts/check-linux-heavy.sh) and re-run"
+            echo "    setup.sh --stow if you want caches on local disk."
+        else
+            echo "==> Normal mode (no ~/.local-heavy heavy workflow on this OS)."
+        fi
+        echo "==> Stowing normal agent-guidance packages into \$HOME..."
+        stow $STOW_FLAGS --no-folding --target="$HOME" \
+            "${AGENT_GUIDANCE_NORMAL[@]}"
     fi
 fi
 

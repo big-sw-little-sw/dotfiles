@@ -13,7 +13,12 @@ Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/) an
 
 **Heavy storage redirection** (optional): On machines where `$HOME` is space-constrained (NFS quota, small partition, etc.), tool-generated caches (Cargo, Rust, npm, Maven, VS Code Server, JetBrains, etc.) are redirected to a local disk via a user-created anchor symlink `~/.local-heavy`. The repo contains the symlink skeletons; each machine/user creates the anchor once. Machines without storage pressure can skip this entirely.
 
-**Agent guidance** (optional): The canonical defaults live at `stow/common/.config/agent-guidance/global-agent-defaults.md`. Tool-facing guidance files for Claude, Codex, Cursor, OpenCode, Pi, and Cline are symlink aliases back to that canonical file. See `README_AGENT_GUIDANCE.md` before stowing these packages; normal-mode agent packages should use `--no-folding`.
+**Agent guidance**: The canonical defaults live at `stow/common/.config/agent-guidance/global-agent-defaults.md`. Tool-facing guidance files for Claude, Codex, Cursor, OpenCode, Pi, and Cline are symlink aliases back to that canonical file. `setup.sh --stow` applies them automatically:
+
+- **Heavy** (Linux + `~/.local-heavy`): `agent-guidance-heavy` onto the local disk
+- **Normal** (macOS, or Linux without the anchor): `agent-guidance-*` into `$HOME` with `--no-folding`
+
+See `README_AGENT_GUIDANCE.md` for details and unstow/migration notes.
 
 ---
 
@@ -57,7 +62,7 @@ cd ~/dotfiles
 
 bash scripts/setup.sh                 # brew + stow (default)
 bash scripts/setup.sh --brew          # Homebrew packages only
-bash scripts/setup.sh --stow          # stow / heavy-links only
+bash scripts/setup.sh --stow          # stow + agent guidance (heavy if ~/.local-heavy)
 bash scripts/setup.sh --dry-run       # preview both steps
 bash scripts/setup.sh --stow --dry-run
 ```
@@ -220,19 +225,10 @@ LOCAL_DISK=/data/home-mirror
 ```bash
 bash ~/dotfiles/scripts/setup.sh --stow
 # or full setup: bash ~/dotfiles/scripts/setup.sh
-# heavy packages are applied automatically when ~/.local-heavy exists
+# heavy packages + agent-guidance-heavy are applied when ~/.local-heavy exists
 ```
 
 Or manually — note the **different mechanisms**:
-
-```bash
-cd ~/dotfiles/stow
-HEAVY_ROOT="$(cd ~/.local-heavy && pwd -P)"
-stow -R --no-folding --target="$HEAVY_ROOT" heavy-dirs   # skeleton onto local disk
-bash ~/dotfiles/scripts/apply-heavy-links.sh             # redirects into $HOME
-```
-
-For heavy agent guidance, also stow into the local disk:
 
 ```bash
 cd ~/dotfiles/stow
@@ -244,8 +240,10 @@ bash ~/dotfiles/scripts/apply-heavy-links.sh
 ### What this changes
 
 - `heavy-dirs` is stowed with `--no-folding --target=<local disk>`. That creates **real** directories (`cargo/`, `cache/uv/`, …) on the local disk and only symlinks the `.gitkeep` leaves into the repo. `--no-folding` is required so runtime data does not land in the git checkout.
+- `agent-guidance-heavy` is stowed into the same local disk target (e.g. `CLAUDE.md`, `AGENTS.md` under `agent-tools/`).
 - `heavy-links` is a package of relative symlink *definitions*. `apply-heavy-links.sh` copies those into `$HOME` as one-hop links (e.g. `~/.cargo` → `.local-heavy/cargo`), which resolve through the anchor onto local disk.
 - Do **not** `stow heavy-links` — Stow would create broken double-symlinks. Do **not** stow `heavy-dirs` or `agent-guidance-heavy` with `--target="$HOME"` — that conflicts with the user-created `~/.local-heavy` anchor.
+- Do **not** also stow normal-mode `agent-guidance-*` packages for the same tool paths. Unstow those first if present.
 
 To check anchor status at any time:
 

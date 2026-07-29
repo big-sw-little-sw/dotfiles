@@ -12,10 +12,8 @@ print_apply_instructions() {
     echo ""
     echo "  cd $REPO_ROOT/stow"
     echo "  HEAVY_ROOT=\"\$(cd ~/.local-heavy && pwd -P)\""
-    echo "  stow -R --no-folding --target=\"\$HEAVY_ROOT\" heavy-dirs"
+    echo "  stow -R --no-folding --target=\"\$HEAVY_ROOT\" heavy-dirs agent-guidance-heavy"
     echo "  bash $REPO_ROOT/scripts/apply-heavy-links.sh"
-    echo "  # optional:"
-    echo "  # stow -R --no-folding --target=\"\$HEAVY_ROOT\" agent-guidance-heavy"
     echo ""
     echo "Or simply: bash $REPO_ROOT/scripts/setup.sh --stow"
 }
