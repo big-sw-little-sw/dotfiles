@@ -543,7 +543,7 @@ stow -R --no-folding --target="$HEAVY_ROOT" heavy-dirs agent-guidance-heavy
 bash ../scripts/apply-heavy-links.sh
 ```
 
-Your current `scripts/setup.sh` may apply only `common`, the OS package, `heavy-dirs`, and `heavy-links`. If you want agent guidance packages applied automatically, update `setup.sh` to include your selected packages.
+Your current `scripts/setup.sh --stow` may apply only `common`, the OS package, `heavy-dirs`, and `heavy-links`. If you want agent guidance packages applied automatically, update `setup.sh` to include your selected packages.
 
 For normal mode, add `--no-folding` to the agent guidance stow call:
 

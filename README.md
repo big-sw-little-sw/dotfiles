@@ -49,14 +49,17 @@ brew install stow
 
 ## Setup
 
-`setup.sh` handles everything: detects your OS, installs packages via `brew bundle`, and stows dotfiles. It is safe to re-run at any time — `brew bundle` is idempotent and stow is invoked with `-R` (restow), which removes then re-creates symlinks. This handles re-runs, post-pull updates, conflict recovery, and new package additions cleanly.
+`setup.sh` handles brew and/or stow: detects your OS, installs packages via `brew bundle`, and stows dotfiles. It is safe to re-run at any time — `brew bundle` is idempotent and stow is invoked with `-R` (restow), which removes then re-creates symlinks. This handles re-runs, post-pull updates, conflict recovery, and new package additions cleanly.
 
 ```bash
 git clone <your-repo-url> ~/dotfiles
 cd ~/dotfiles
 
-bash scripts/setup.sh            # apply
-bash scripts/setup.sh --dry-run  # preview: show missing packages and stow conflicts
+bash scripts/setup.sh                 # brew + stow (default)
+bash scripts/setup.sh --brew          # Homebrew packages only
+bash scripts/setup.sh --stow          # stow / heavy-links only
+bash scripts/setup.sh --dry-run       # preview both steps
+bash scripts/setup.sh --stow --dry-run
 ```
 
 On Linux, if `~/.local-heavy` exists, the heavy redirection packages are stowed automatically. See [Linux: heavy storage redirection](#linux-heavy-storage-redirection) for setup.
@@ -116,7 +119,8 @@ Re-run `setup.sh` — it is idempotent and handles everything:
 ```bash
 cd ~/dotfiles
 git pull
-bash scripts/setup.sh
+bash scripts/setup.sh            # brew + stow
+# bash scripts/setup.sh --stow   # stow only, after a pull that only changed dotfiles
 ```
 
 `brew bundle` skips already-installed packages. `stow -R` removes and re-creates symlinks, picking up new files, moved files, and deletions correctly.
@@ -214,7 +218,8 @@ LOCAL_DISK=/data/home-mirror
 ### Step 2 — run setup.sh (or apply manually)
 
 ```bash
-bash ~/dotfiles/scripts/setup.sh
+bash ~/dotfiles/scripts/setup.sh --stow
+# or full setup: bash ~/dotfiles/scripts/setup.sh
 # heavy packages are applied automatically when ~/.local-heavy exists
 ```
 

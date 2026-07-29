@@ -17,7 +17,7 @@ print_apply_instructions() {
     echo "  # optional:"
     echo "  # stow -R --no-folding --target=\"\$HEAVY_ROOT\" agent-guidance-heavy"
     echo ""
-    echo "Or simply: bash $REPO_ROOT/scripts/setup.sh"
+    echo "Or simply: bash $REPO_ROOT/scripts/setup.sh --stow"
 }
 
 if [[ -L "$ANCHOR" ]]; then
