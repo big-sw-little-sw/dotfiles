@@ -33,15 +33,19 @@ stow/agent-guidance-*/
 - Use when the tool directory lives directly under $HOME.
 
 stow/heavy-links/
-- $HOME redirects into ~/.local-heavy.
+- $HOME redirect *definitions* into ~/.local-heavy.
+- Applied with scripts/apply-heavy-links.sh (do not `stow heavy-links`).
 - Storage policy only.
 
 stow/heavy-dirs/
-- ~/.local-heavy skeleton directories and .gitkeep files only.
+- Skeleton directories and .gitkeep files only.
+- Stowed with --no-folding into the local disk that ~/.local-heavy points at.
 - No durable guidance files here.
 
 stow/agent-guidance-heavy/
-- Heavy-mode durable guidance files inside ~/.local-heavy targets.
+- Heavy-mode durable guidance files for agent tool dirs under the local disk.
+- Package layout is relative to the local disk root (e.g. agent-tools/claude/...).
+- Stowed with --no-folding into the same local disk target as heavy-dirs.
 - These are symlink aliases back to the canonical guidance text.
 - Use only when agent tool directories are redirected through heavy-links.
 ```
@@ -202,13 +206,21 @@ Use this when agent tool directories should live under local heavy storage.
 
 Prerequisite: `~/.local-heavy` exists and points to a machine-local disk.
 
+`heavy-dirs` and `agent-guidance-heavy` are stowed **into the local disk**.
+`common` / `linux` are stowed into `$HOME`. `heavy-links` is applied with the helper script.
+
 ```bash
 cd ~/sw/code/dotfiles/stow
+HEAVY_ROOT="$(cd ~/.local-heavy && pwd -P)"
 
-stow -n -R --target="$HOME" common linux heavy-dirs heavy-links agent-guidance-heavy
+stow -n -R --target="$HOME" common linux
+stow -n -R --no-folding --target="$HEAVY_ROOT" heavy-dirs agent-guidance-heavy
+bash ../scripts/apply-heavy-links.sh --dry-run
 
 # If the dry-run looks good:
-stow -R --target="$HOME" common linux heavy-dirs heavy-links agent-guidance-heavy
+stow -R --target="$HOME" common linux
+stow -R --no-folding --target="$HEAVY_ROOT" heavy-dirs agent-guidance-heavy
+bash ../scripts/apply-heavy-links.sh
 ```
 
 Do not also stow normal packages for the same redirected tool path.
@@ -522,11 +534,16 @@ Heavy mode example:
 cd ~/sw/code/dotfiles
 git pull
 cd stow
-stow -n -R --target="$HOME" common linux heavy-dirs heavy-links agent-guidance-heavy
-stow -R --target="$HOME" common linux heavy-dirs heavy-links agent-guidance-heavy
+HEAVY_ROOT="$(cd ~/.local-heavy && pwd -P)"
+stow -n -R --target="$HOME" common linux
+stow -n -R --no-folding --target="$HEAVY_ROOT" heavy-dirs agent-guidance-heavy
+bash ../scripts/apply-heavy-links.sh --dry-run
+stow -R --target="$HOME" common linux
+stow -R --no-folding --target="$HEAVY_ROOT" heavy-dirs agent-guidance-heavy
+bash ../scripts/apply-heavy-links.sh
 ```
 
-Your current `scripts/setup.sh` may stow only `common`, the OS package, and heavy packages. If you want agent guidance packages applied automatically, update `setup.sh` to include your selected packages.
+Your current `scripts/setup.sh` may apply only `common`, the OS package, `heavy-dirs`, and `heavy-links`. If you want agent guidance packages applied automatically, update `setup.sh` to include your selected packages.
 
 For normal mode, add `--no-folding` to the agent guidance stow call:
 
@@ -537,10 +554,12 @@ stow $STOW_FLAGS --no-folding --target="$HOME" \
   agent-guidance-cursor
 ```
 
-For heavy mode, add `agent-guidance-heavy` to the existing heavy package command:
+For heavy mode, stow `agent-guidance-heavy` into the local disk alongside `heavy-dirs`:
 
 ```bash
-stow $STOW_FLAGS --target="$HOME" heavy-dirs heavy-links agent-guidance-heavy
+HEAVY_ROOT="$(cd ~/.local-heavy && pwd -P)"
+stow $STOW_FLAGS --no-folding --target="$HEAVY_ROOT" heavy-dirs agent-guidance-heavy
+bash ../scripts/apply-heavy-links.sh
 ```
 
 Keep normal vs heavy decisions explicit. Do not hide them inside `common`.
@@ -574,12 +593,12 @@ stow/agent-guidance-cursor/.cursor/rules/global-agent-defaults.md
 stow/agent-guidance-opencode/.config/opencode/AGENTS.md
 stow/agent-guidance-pi/.pi/agent/AGENTS.md
 stow/agent-guidance-cline/.cline/rules/global-agent-defaults.md
-stow/agent-guidance-heavy/.local-heavy/agent-tools/claude/CLAUDE.md
-stow/agent-guidance-heavy/.local-heavy/agent-tools/codex/AGENTS.md
-stow/agent-guidance-heavy/.local-heavy/agent-tools/cursor/rules/global-agent-defaults.md
-stow/agent-guidance-heavy/.local-heavy/agent-tools/opencode/AGENTS.md
-stow/agent-guidance-heavy/.local-heavy/agent-tools/pi/agent/AGENTS.md
-stow/agent-guidance-heavy/.local-heavy/agent-tools/cline/rules/global-agent-defaults.md
+stow/agent-guidance-heavy/agent-tools/claude/CLAUDE.md
+stow/agent-guidance-heavy/agent-tools/codex/AGENTS.md
+stow/agent-guidance-heavy/agent-tools/cursor/rules/global-agent-defaults.md
+stow/agent-guidance-heavy/agent-tools/opencode/AGENTS.md
+stow/agent-guidance-heavy/agent-tools/pi/agent/AGENTS.md
+stow/agent-guidance-heavy/agent-tools/cline/rules/global-agent-defaults.md
 ```
 
 Check that all aliases resolve:

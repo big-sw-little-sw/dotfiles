@@ -1,22 +1,42 @@
 #!/usr/bin/env bash
 # check-linux-heavy.sh — verify ~/.local-heavy anchor symlink status
+# and print the commands to apply heavy packages.
 
 set -euo pipefail
 
 ANCHOR="$HOME/.local-heavy"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+print_apply_instructions() {
+    echo "Apply heavy packages (skeleton onto local disk, links into \$HOME):"
+    echo ""
+    echo "  cd $REPO_ROOT/stow"
+    echo "  HEAVY_ROOT=\"\$(cd ~/.local-heavy && pwd -P)\""
+    echo "  stow -R --no-folding --target=\"\$HEAVY_ROOT\" heavy-dirs"
+    echo "  bash $REPO_ROOT/scripts/apply-heavy-links.sh"
+    echo "  # optional:"
+    echo "  # stow -R --no-folding --target=\"\$HEAVY_ROOT\" agent-guidance-heavy"
+    echo ""
+    echo "Or simply: bash $REPO_ROOT/scripts/setup.sh"
+}
 
 if [[ -L "$ANCHOR" ]]; then
     target="$(readlink "$ANCHOR")"
     echo "OK: ~/.local-heavy exists and points to: $target"
     if [[ -d "$ANCHOR" ]]; then
-        echo "OK: target directory exists and is accessible."
+        heavy_root="$(cd "$ANCHOR" && pwd -P)"
+        echo "OK: target directory exists and is accessible: $heavy_root"
     else
         echo "WARNING: target directory does not exist yet: $target"
-        echo "  Create it with: mkdir -p $target"
+        echo "  Create it with: mkdir -p \"$target\""
     fi
+    echo ""
+    print_apply_instructions
 elif [[ -e "$ANCHOR" ]]; then
     echo "WARNING: ~/.local-heavy exists but is NOT a symlink."
-    echo "  It appears to be a real directory. Heavy stow packages expect it to be a symlink."
+    echo "  It appears to be a real directory. Prefer a symlink to local disk."
+    echo ""
+    print_apply_instructions
 else
     echo "MISSING: ~/.local-heavy does not exist."
     echo ""
@@ -27,7 +47,7 @@ else
     echo "  mkdir -p \"\$LOCAL_DISK\""
     echo "  ln -s \"\$LOCAL_DISK\" ~/.local-heavy"
     echo ""
-    echo "Then stow the heavy packages:"
-    echo "  cd /path/to/dotfiles/stow"
-    echo "  stow -R heavy-dirs heavy-links agent-guidance-heavy"
+    echo "Then apply heavy packages:"
+    echo ""
+    print_apply_instructions
 fi

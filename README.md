@@ -8,7 +8,7 @@ Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/) an
 |---|---|---|
 | Dotfiles | GNU Stow | `common` / `macos` / `linux` |
 | Packages | `brew bundle` | `Brewfile.common` / `.macos` / `.linux` |
-| Heavy storage redirection | GNU Stow | `heavy-links` + `heavy-dirs` |
+| Heavy storage redirection | Stow + helper | `heavy-dirs` (stow into local disk) + `heavy-links` (via `apply-heavy-links.sh`) |
 | Agent guidance | GNU Stow | `agent-guidance-*` + `agent-guidance-heavy` |
 
 **Heavy storage redirection** (optional): On machines where `$HOME` is space-constrained (NFS quota, small partition, etc.), tool-generated caches (Cargo, Rust, npm, Maven, VS Code Server, JetBrains, etc.) are redirected to a local disk via a user-created anchor symlink `~/.local-heavy`. The repo contains the symlink skeletons; each machine/user creates the anchor once. Machines without storage pressure can skip this entirely.
@@ -79,14 +79,14 @@ For each conflicting path, back it up and remove it, then re-run:
 ```bash
 mv ~/.zshrc ~/.zshrc.bak                  # conflicting dotfile — back up and remove
 rm ~/.cargo                               # conflicting foreign symlink — just remove
-cd ~/dotfiles/stow && stow -R --target="$HOME" common heavy-links
+cd ~/dotfiles/stow && stow -R --target="$HOME" common
 ```
 
-If the conflicting path is a real directory with content you want to keep (e.g. `~/.cargo` with existing crates), move it, restow, then migrate the content:
+If the conflicting path is a real directory with content you want to keep (e.g. `~/.cargo` with existing crates), move it, re-apply heavy-links, then migrate the content:
 
 ```bash
 mv ~/.cargo ~/.cargo.bak
-cd ~/dotfiles/stow && stow -R --target="$HOME" heavy-links
+bash ~/dotfiles/scripts/apply-heavy-links.sh
 mv ~/.cargo.bak/* ~/.cargo/               # ~/.cargo now points to ~/.local-heavy/cargo
 ```
 
@@ -180,6 +180,15 @@ stow -R --target="$HOME" common linux
 
 Do this when `$HOME` is space-constrained and you want Cargo, Rust, npm, Maven, VS Code Server, JetBrains caches, etc. redirected to local disk.
 
+There are two layers:
+
+1. **Anchor** (machine-local, not in git): `~/.local-heavy` → your local disk path
+2. **Packages**: `heavy-dirs` creates the skeleton **on that local disk**; `heavy-links` defines relative redirects that are applied into `$HOME` through the anchor
+
+```text
+~/.cargo  →  .local-heavy/cargo  →  /local/mnt/.../home-mirror/cargo
+```
+
 ### Step 1 — create the anchor symlink (machine-local, NOT in git)
 
 ```bash
@@ -202,31 +211,36 @@ On a personal Linux box it might be a local SSD:
 LOCAL_DISK=/data/home-mirror
 ```
 
-### Step 2 — run setup.sh (or stow manually)
+### Step 2 — run setup.sh (or apply manually)
 
 ```bash
 bash ~/dotfiles/scripts/setup.sh
-# heavy packages are stowed automatically when ~/.local-heavy exists
+# heavy packages are applied automatically when ~/.local-heavy exists
 ```
 
-Or manually:
+Or manually — note the **different mechanisms**:
 
 ```bash
 cd ~/dotfiles/stow
-stow -R --target="$HOME" heavy-dirs heavy-links
+HEAVY_ROOT="$(cd ~/.local-heavy && pwd -P)"
+stow -R --no-folding --target="$HEAVY_ROOT" heavy-dirs   # skeleton onto local disk
+bash ~/dotfiles/scripts/apply-heavy-links.sh             # redirects into $HOME
 ```
 
-For heavy agent guidance, include `agent-guidance-heavy`:
+For heavy agent guidance, also stow into the local disk:
 
 ```bash
 cd ~/dotfiles/stow
-stow -R --target="$HOME" heavy-dirs heavy-links agent-guidance-heavy
+HEAVY_ROOT="$(cd ~/.local-heavy && pwd -P)"
+stow -R --no-folding --target="$HEAVY_ROOT" heavy-dirs agent-guidance-heavy
+bash ~/dotfiles/scripts/apply-heavy-links.sh
 ```
 
 ### What this changes
 
-- `heavy-dirs` stows the directory skeleton under `~/.local-heavy/`, using `.gitkeep` files to track structure without tracking runtime content.
-- `heavy-links` stows symlinks in `$HOME` so that paths like `~/.cargo`, `~/.cache/uv`, `~/.vscode-server`, etc. resolve through `~/.local-heavy` and land on local disk.
+- `heavy-dirs` is stowed with `--no-folding --target=<local disk>`. That creates **real** directories (`cargo/`, `cache/uv/`, …) on the local disk and only symlinks the `.gitkeep` leaves into the repo. `--no-folding` is required so runtime data does not land in the git checkout.
+- `heavy-links` is a package of relative symlink *definitions*. `apply-heavy-links.sh` copies those into `$HOME` as one-hop links (e.g. `~/.cargo` → `.local-heavy/cargo`), which resolve through the anchor onto local disk.
+- Do **not** `stow heavy-links` — Stow would create broken double-symlinks. Do **not** stow `heavy-dirs` or `agent-guidance-heavy` with `--target="$HOME"` — that conflicts with the user-created `~/.local-heavy` anchor.
 
 To check anchor status at any time:
 
@@ -248,6 +262,7 @@ bash ~/dotfiles/scripts/check-linux-heavy.sh
 | `~/.vscode-server` | `~/.local-heavy/vscode-server` |
 | `~/.vscode-remote-containers` | `~/.local-heavy/vscode-remote-containers` |
 | `~/.cache/JetBrains` | `~/.local-heavy/cache/JetBrains` |
+| `~/.cache/Homebrew` | `~/.local-heavy/cache/Homebrew` |
 | `~/.cache/sccache` | `~/.local-heavy/cache/sccache` |
 | `~/.cache/uv` | `~/.local-heavy/cache/uv` |
 | `~/.cache/pip` | `~/.local-heavy/cache/pip` |
@@ -302,9 +317,9 @@ bash ~/dotfiles/scripts/check-linux-heavy.sh
 
 Say you want to redirect `~/.new-tool` to local storage. Two places must be updated:
 
-1. **Add the symlink** in `stow/linux-heavy-links/`:
+1. **Add the symlink** in `stow/heavy-links/`:
    ```bash
-   cd ~/dotfiles/stow/linux-heavy-links
+   cd ~/dotfiles/stow/heavy-links
    ln -s .local-heavy/new-tool .new-tool
    ```
    For nested paths (e.g. `~/.cache/new-tool`, `~/.local/share/new-tool`), the relative target gains one `..` per extra directory level:
@@ -313,19 +328,22 @@ Say you want to redirect `~/.new-tool` to local storage. Two places must be upda
    ln -s ../../.local-heavy/local/share/new-tool .local/share/new-tool  # depth 3
    ```
 
-2. **Add the skeleton directory** in `stow/linux-heavy-dirs/`:
+2. **Add the skeleton directory** in `stow/heavy-dirs/` (no `.local-heavy/` prefix — that package is stowed *into* the local disk):
    ```bash
-   mkdir -p ~/dotfiles/stow/linux-heavy-dirs/.local-heavy/new-tool
-   touch    ~/dotfiles/stow/linux-heavy-dirs/.local-heavy/new-tool/.gitkeep
+   mkdir -p ~/dotfiles/stow/heavy-dirs/new-tool
+   touch    ~/dotfiles/stow/heavy-dirs/new-tool/.gitkeep
    ```
 
-3. `.gitignore` already covers runtime content under `linux-heavy-dirs/` — no changes needed there.
+3. `.gitignore` already covers runtime content under `heavy-dirs/` — no changes needed there.
 
-4. Re-stow, commit, and push:
+4. Re-apply, commit, and push:
    ```bash
-   cd ~/dotfiles/stow && stow -R --target="$HOME" linux-heavy-dirs linux-heavy-links
+   cd ~/dotfiles/stow
+   HEAVY_ROOT="$(cd ~/.local-heavy && pwd -P)"
+   stow -R --no-folding --target="$HEAVY_ROOT" heavy-dirs
+   bash ~/dotfiles/scripts/apply-heavy-links.sh
    cd ~/dotfiles
-   git add stow/linux-heavy-links/.new-tool stow/linux-heavy-dirs/.local-heavy/new-tool/.gitkeep
+   git add stow/heavy-links/.new-tool stow/heavy-dirs/new-tool/.gitkeep
    git commit -m "Add ~/.new-tool as heavy path"
    git push
    ```

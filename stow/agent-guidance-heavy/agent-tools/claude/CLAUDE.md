@@ -1,0 +1,1 @@
+../../../common/.config/agent-guidance/global-agent-defaults.md

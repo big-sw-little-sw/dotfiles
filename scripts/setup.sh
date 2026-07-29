@@ -61,10 +61,24 @@ cd "$STOW_DIR"
 stow $STOW_FLAGS --target="$HOME" common "$OS"
 
 # ── Linux heavy redirection (optional) ───────────────────────
+# heavy-dirs  → stowed into the local disk that ~/.local-heavy points at
+# heavy-links → applied into $HOME as one-hop relative symlinks (see
+#               scripts/apply-heavy-links.sh — do not `stow heavy-links`)
 if [[ "$OS" == linux ]]; then
     if [[ -L "$HOME/.local-heavy" || -d "$HOME/.local-heavy" ]]; then
-        echo "==> ~/.local-heavy found; stowing heavy packages..."
-        stow $STOW_FLAGS --target="$HOME" heavy-dirs heavy-links
+        HEAVY_ROOT="$(cd "$HOME/.local-heavy" && pwd -P)"
+        echo "==> ~/.local-heavy found -> $HEAVY_ROOT"
+        # --no-folding: create real directories on the local disk and only symlink
+        # leaf files (.gitkeep). Tree-folding would make cargo/ etc. symlinks
+        # into the repo, and runtime data would land in the checkout.
+        echo "==> Stowing heavy-dirs into local disk..."
+        stow $STOW_FLAGS --no-folding --target="$HEAVY_ROOT" heavy-dirs
+        echo "==> Applying heavy-links into \$HOME..."
+        if $DRY_RUN; then
+            bash "$REPO_ROOT/scripts/apply-heavy-links.sh" --dry-run
+        else
+            bash "$REPO_ROOT/scripts/apply-heavy-links.sh"
+        fi
     else
         echo ""
         echo "WARNING: ~/.local-heavy is missing — skipping heavy redirection."
