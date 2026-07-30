@@ -33,6 +33,7 @@ This function should only modify configuration layer settings."
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
    '(html
+     toml
      javascript
      ;; ----------------------------------------------------------------
      ;; Example of useful layers you may want to use right away.
@@ -45,10 +46,14 @@ This function should only modify configuration layer settings."
      ;; git
      helm
      lsp
-     ;; markdown
+     markdown
      multiple-cursors
      clojure
-     ;; org
+     (org :variables
+          org-enable-github-support t
+          org-enable-reveal-js-support t
+          org-enable-mermaid-support t
+          org-enable-modern-support t)
      ;; (shell :variables
      ;;        shell-default-height 30
      ;;        shell-default-position 'bottom)
