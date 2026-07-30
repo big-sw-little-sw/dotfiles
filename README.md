@@ -256,6 +256,7 @@ bash ~/dotfiles/scripts/check-linux-heavy.sh
 | Home path | Redirects to |
 |---|---|
 | `~/.cargo` | `~/.local-heavy/cargo` |
+| `~/.emacs.d` | `~/.local-heavy/emacs.d` |
 | `~/.rustup` | `~/.local-heavy/rustup` |
 | `~/.nvm` | `~/.local-heavy/nvm` |
 | `~/.npm` | `~/.local-heavy/npm` |
