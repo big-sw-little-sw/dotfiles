@@ -603,34 +603,41 @@ This function is called at the very end of Spacemacs initialization."
    ;; Your init file should contain only one such instance.
    ;; If there is more than one, they won't work right.
    '(package-selected-packages
-     '(ace-link add-node-modules-path aggressive-indent all-the-icons auto-compile
-                auto-highlight-symbol avy-jump-helm-line bui centered-cursor-mode
-                cider cider-eval-sexp-fu clean-aindent-mode clojure-mode
-                column-enforce-mode company-web counsel counsel-css dap-mode
-                define-word devdocs diminish dired-quick-sort disable-mouse
-                dotenv-mode drag-stuff dumb-jump elisp-def elisp-demos
-                elisp-slime-nav emmet-mode emr eval-sexp-fu evil-anzu evil-args
-                evil-cleverparens evil-collection evil-easymotion evil-escape
-                evil-evilified-state evil-exchange evil-goggles evil-iedit-state
-                evil-indent-plus evil-lion evil-lisp-state evil-matchit evil-mc
-                evil-nerd-commenter evil-numbers evil-surround evil-textobj-line
-                evil-tutor evil-unimpaired evil-visual-mark-mode evil-visualstar
-                expand-region eyebrowse fancy-battery ggtags golden-ratio
-                google-translate grizzl haml-mode helm-ag helm-cider helm-comint
-                helm-css-scss helm-descbinds helm-make helm-mode-manager helm-org
-                helm-projectile helm-purpose helm-swoop helm-xref hide-comnt
-                highlight-indentation highlight-numbers highlight-parentheses
-                hl-todo holy-mode htmlize hungry-delete hybrid-mode impatient-mode
-                import-js indent-guide info+ inspector ivy js-doc js2-mode
-                js2-refactor link-hint livid-mode lorem-ipsum lsp-docker macrostep
+     '(ace-link add-node-modules-path aggressive-indent alert all-the-icons
+                auto-compile auto-highlight-symbol avy-jump-helm-line bui
+                centered-cursor-mode cider cider-eval-sexp-fu clean-aindent-mode
+                clojure-mode column-enforce-mode company-web counsel counsel-css
+                dap-mode define-word devdocs diminish dired-quick-sort
+                disable-mouse dotenv-mode drag-stuff dumb-jump edit-indirect
+                elisp-def elisp-demos elisp-slime-nav emmet-mode emr eval-sexp-fu
+                evil-anzu evil-args evil-cleverparens evil-collection
+                evil-easymotion evil-escape evil-evilified-state evil-exchange
+                evil-goggles evil-iedit-state evil-indent-plus evil-lion
+                evil-lisp-state evil-matchit evil-mc evil-nerd-commenter
+                evil-numbers evil-org evil-surround evil-textobj-line evil-tutor
+                evil-unimpaired evil-visual-mark-mode evil-visualstar
+                expand-region eyebrowse fancy-battery ggtags gh-md gntp gnuplot
+                golden-ratio google-translate grizzl haml-mode helm-ag helm-cider
+                helm-comint helm-css-scss helm-descbinds helm-make
+                helm-mode-manager helm-org helm-org-rifle helm-projectile
+                helm-purpose helm-swoop helm-xref hide-comnt highlight-indentation
+                highlight-numbers highlight-parentheses hl-todo holy-mode htmlize
+                hungry-delete hybrid-mode impatient-mode import-js indent-guide
+                info+ inspector ivy js-doc js2-mode js2-refactor json-mode
+                json-navigator json-reformat json-snatcher link-hint livid-mode
+                log4e lorem-ipsum lsp-docker macrostep markdown-toc mermaid-mode
                 multi-line multiple-cursors nameless nodejs-repl npm-mode
-                open-junk-file org org-superstar overseer page-break-lines paradox
-                parseclj parseedn password-generator pcre2el popwin prettier-js
-                pug-mode queue quickrun rainbow-delimiters restart-emacs sass-mode
-                scss-mode sesman simple-httpd skewer-mode slim-mode space-doc
-                spaceline spacemacs-purpose-popwin spacemacs-whitespace-cleanup
-                string-edit-at-point string-inflection swiper symbol-overlay symon
-                tagedit term-cursor tern toc-org transient treemacs-evil
+                ob-mermaid open-junk-file org org-category-capture org-cliplink
+                org-contrib org-download org-mime org-modern org-pomodoro
+                org-present org-project-capture org-projectile org-re-reveal
+                org-rich-yank org-superstar overseer ox-gfm page-break-lines
+                paradox parseclj parseedn password-generator pcre2el popwin
+                prettier-js pug-mode queue quickrun rainbow-delimiters
+                restart-emacs sass-mode scss-mode sesman simple-httpd skewer-mode
+                slim-mode space-doc spaceline spacemacs-purpose-popwin
+                spacemacs-whitespace-cleanup string-edit-at-point
+                string-inflection swiper symbol-overlay symon tagedit term-cursor
+                tern toc-org toml-mode transient treemacs-evil
                 treemacs-icons-dired treemacs-persp treemacs-projectile
                 undo-fu-session uuidgen vi-tilde-fringe volatile-highlights vundo
                 web-beautify web-completion-data web-mode wgrep winum
